@@ -1,7 +1,6 @@
 package mnemo
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -16,14 +15,24 @@ func TestSpecial(t *testing.T) {
 }
 
 func TestBackAndForth(t *testing.T) {
-	fmt.Printf("takeshi = %d\n", ToInteger("takeshi"))
-	fmt.Printf("%d = %s\n", ToInteger("takeshi"), FromInteger(ToInteger("takeshi")))
+	if FromInteger(Must(ToInteger("takeshi"))) != "takeshi" {
+		t.Fatalf("'takeshi' != %s", FromInteger(Must(ToInteger("takeshi"))))
+	}
+
 }
 
 func TestIsMnemoWord(t *testing.T) {
 	if !IsMnemoWord("takeshi") {
 		t.Fatalf("%s is not a word and should be", "takeshi")
-
+	}
+	if !IsMnemoWord("tsunasima") {
+		t.Fatalf("%s is not a word and should be", "tsunasima")
+	}
+	if !IsMnemoWord("tunashima") {
+		t.Fatalf("%s is not a word and should be", "tunashima")
+	}
+	if IsMnemoWord("dsfadf") {
+		t.Fatalf("%s is a word and should no be", "dsfadf")
 	}
 
 }

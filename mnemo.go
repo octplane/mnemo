@@ -42,19 +42,35 @@ func toNumber(syl string) (int, error) {
 			return ix, nil
 		}
 	}
-	return -1, errors.New(fmt.Sprint("Syllabe \"%s\" not found", syl))
+	return -1, errors.New(fmt.Sprintf("Syllabe \"%s\" not found", syl))
 }
 
-func toInt(value string) int {
-	if len(value) == 0 {
-		return 0
-	}
-	if strings.HasPrefix(value, NEG) {
-		return -1 * toInt(value[len(NEG):])
-	}
-	n, _ := toNumber(value[len(value)-2 : len(value)])
+func toInt(value string) (int, error) {
+	var val int
+	var base int
+	var err error
 
-	return len(SYL())*toInt(value[0:len(value)-3]) + n
+	if len(value) == 0 {
+		return 0, nil
+	}
+
+	if strings.HasPrefix(value, NEG) {
+		val, err = toInt(value[len(NEG):])
+		if err != nil {
+			return -1, err
+		}
+		return -1 * val, nil
+	}
+	val, err = toNumber(value[len(value)-2 : len(value)])
+	if err != nil {
+		return -1, err
+	}
+	base, err = toInt(value[:len(value)-2])
+	if err != nil {
+		return -1, err
+	}
+
+	return len(SYL())*base + val, nil
 }
 
 func toSpecial(value string) string {
@@ -82,19 +98,30 @@ func fromInteger(value int) string {
 }
 
 func IsMnemoWord(value string) bool {
+	_, err := ToInteger(value)
+	if err != nil {
+		return false
+	}
 	return true
 }
 
 func FromInteger(value int) string {
 	if value < 0 {
-		return fmt.Sprint("%s%s", NEG, FromInteger(-value))
+		return fmt.Sprintf("%s%s", NEG, FromInteger(-value))
 	}
 
 	return toSpecial(fromInteger(value))
 }
 
-func ToInteger(value string) int {
-	return toInt(fromSpecial(value))
+func Must(val int, err error) int {
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
+
+func ToInteger(mnemo string) (int, error) {
+	return toInt(fromSpecial(mnemo))
 }
 
 func main() {
