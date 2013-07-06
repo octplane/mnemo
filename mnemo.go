@@ -1,4 +1,5 @@
-// mnemo.go
+// This package provides methods for turning integer into words and vice-verse
+// It is a port of the ruby library rufus-mnemo
 package mnemo
 
 import (
@@ -7,9 +8,10 @@ import (
 	"strings"
 )
 
-const NEG string = "wi"
+// string prefix for negative numbers
+const neg string = "wi"
 
-func SYL() []string {
+func syl() []string {
 	return []string{"ba", "be", "bi", "bo", "bu",
 		"da", "de", "di", "do", "du",
 		"ga", "ge", "gi", "go", "gu",
@@ -26,7 +28,7 @@ func SYL() []string {
 		"wa", "wo", "ya", "yo", "yu"}
 }
 
-func SPECIALS() map[string]string {
+func specials() map[string]string {
 	return map[string]string{
 		"hu": "fu",
 		"si": "shi",
@@ -36,13 +38,13 @@ func SPECIALS() map[string]string {
 	}
 }
 
-func toNumber(syl string) (int, error) {
-	for ix, testSyl := range SYL() {
-		if syl == testSyl {
+func toNumber(sym string) (int, error) {
+	for ix, testSyl := range syl() {
+		if sym == testSyl {
 			return ix, nil
 		}
 	}
-	return -1, errors.New(fmt.Sprintf("Syllabe \"%s\" not found", syl))
+	return -1, errors.New(fmt.Sprintf("Syllabe \"%s\" not found", sym))
 }
 
 func toInt(value string) (int, error) {
@@ -54,8 +56,8 @@ func toInt(value string) (int, error) {
 		return 0, nil
 	}
 
-	if strings.HasPrefix(value, NEG) && len(value) > len(NEG) {
-		val, err = toInt(value[len(NEG):])
+	if strings.HasPrefix(value, neg) && len(value) > len(neg) {
+		val, err = toInt(value[len(neg):])
 		if err != nil {
 			return -1, err
 		}
@@ -70,14 +72,14 @@ func toInt(value string) (int, error) {
 		return -1, err
 	}
 
-	return len(SYL())*base + val, nil
+	return len(syl())*base + val, nil
 }
 
 func arrayToSpecial(components []string) []string {
 	ret := make([]string, len(components))
 	for pos, normal := range components {
 		ret[pos] = normal
-		for s, d := range SPECIALS() {
+		for s, d := range specials() {
 			if normal == s {
 				ret[pos] = d
 			}
@@ -87,14 +89,14 @@ func arrayToSpecial(components []string) []string {
 }
 
 func toSpecial(value string) string {
-	for s, d := range SPECIALS() {
+	for s, d := range specials() {
 		value = strings.Replace(value, s, d, -1)
 	}
 	return value
 }
 
 func fromSpecial(value string) string {
-	for d, s := range SPECIALS() {
+	for d, s := range specials() {
 		value = strings.Replace(value, s, d, -1)
 	}
 	return value
@@ -104,10 +106,10 @@ func fromInteger(value int) string {
 	if value == 0 {
 		return ""
 	}
-	mod := value % len(SYL())
-	rest := value / len(SYL())
+	mod := value % len(syl())
+	rest := value / len(syl())
 
-	return FromInteger(rest) + SYL()[mod]
+	return FromInteger(rest) + syl()[mod]
 }
 
 func stringSplit(mnemo string, components []string) []string {
@@ -119,27 +121,32 @@ func stringSplit(mnemo string, components []string) []string {
 	return stringSplit(mnemo[2:], components)
 }
 
+// Split a string into its syllabes
 func Split(mnemo string) []string {
 	components := make([]string, 0)
 	return arrayToSpecial(stringSplit(fromSpecial(mnemo), components))
 }
 
-func IsMnemoWord(value string) bool {
-	_, err := ToInteger(value)
+// Indicate whether this string is parsable or not
+func IsMnemoWord(mnemo string) bool {
+	_, err := ToInteger(mnemo)
 	if err != nil {
 		return false
 	}
 	return true
 }
 
+// Convert an integer into its mnemo string
 func FromInteger(value int) string {
 	if value < 0 {
-		return fmt.Sprintf("%s%s", NEG, FromInteger(-value))
+		return fmt.Sprintf("%s%s", neg, FromInteger(-value))
 	}
 
 	return toSpecial(fromInteger(value))
 }
 
+// Convert a string into an integer.
+// Panics if not parsable
 func Must(val int, err error) int {
 	if err != nil {
 		panic(err)
@@ -147,10 +154,8 @@ func Must(val int, err error) int {
 	return val
 }
 
+// Convert a string into an integer
+// returns an error if something went wrong
 func ToInteger(mnemo string) (int, error) {
 	return toInt(fromSpecial(mnemo))
-}
-
-func main() {
-	fmt.Println(FromInteger(12))
 }
