@@ -76,3 +76,15 @@ func TestNegative(t *testing.T) {
 	backAndForth(t, "wina", -35)
 	backAndForth(t, "wibe", -1)
 }
+
+func TestWiBadPosition(t *testing.T) {
+	testValues := []string{"wi", "wiwi", "bewi", "nawi", "nabewi", "nawibe", "nawiwi"}
+
+	for _, testValue := range testValues {
+		val, err := ToInteger(testValue)
+		if err == nil {
+			t.Fatalf("%s was parsed as %d, should have failed.", testValue, val)
+		}
+		t.Log(err)
+	}
+}

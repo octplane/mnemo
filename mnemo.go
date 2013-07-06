@@ -54,7 +54,7 @@ func toInt(value string) (int, error) {
 		return 0, nil
 	}
 
-	if strings.HasPrefix(value, NEG) {
+	if strings.HasPrefix(value, NEG) && len(value) > len(NEG) {
 		val, err = toInt(value[len(NEG):])
 		if err != nil {
 			return -1, err
