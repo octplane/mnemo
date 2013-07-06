@@ -73,6 +73,19 @@ func toInt(value string) (int, error) {
 	return len(SYL())*base + val, nil
 }
 
+func arrayToSpecial(components []string) []string {
+	ret := make([]string, len(components))
+	for pos, normal := range components {
+		ret[pos] = normal
+		for s, d := range SPECIALS() {
+			if normal == s {
+				ret[pos] = d
+			}
+		}
+	}
+	return ret
+}
+
 func toSpecial(value string) string {
 	for s, d := range SPECIALS() {
 		value = strings.Replace(value, s, d, -1)
@@ -95,6 +108,20 @@ func fromInteger(value int) string {
 	rest := value / len(SYL())
 
 	return FromInteger(rest) + SYL()[mod]
+}
+
+func stringSplit(mnemo string, components []string) []string {
+	if len(mnemo) < 1 {
+		return components
+	}
+	components = append(components, mnemo[0:2])
+
+	return stringSplit(mnemo[2:], components)
+}
+
+func Split(mnemo string) []string {
+	components := make([]string, 0)
+	return arrayToSpecial(stringSplit(fromSpecial(mnemo), components))
 }
 
 func IsMnemoWord(value string) bool {
