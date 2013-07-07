@@ -8,11 +8,13 @@ import (
 	"strings"
 )
 
-// string prefix for negative numbers
-const neg string = "wi"
-
-func syl() []string {
-	return []string{"ba", "be", "bi", "bo", "bu",
+var globals = struct {
+	Neg      string
+	Syl      []string
+	Specials map[string]string
+}{
+	"wi",
+	[]string{"ba", "be", "bi", "bo", "bu",
 		"da", "de", "di", "do", "du",
 		"ga", "ge", "gi", "go", "gu",
 		"ha", "he", "hi", "ho", "hu",
@@ -25,21 +27,17 @@ func syl() []string {
 		"sa", "se", "si", "so", "su",
 		"ta", "te", "ti", "to", "tu",
 		"za", "ze", "zi", "zo", "zu",
-		"wa", "wo", "ya", "yo", "yu"}
-}
-
-func specials() map[string]string {
-	return map[string]string{
+		"wa", "wo", "ya", "yo", "yu"},
+	map[string]string{
 		"hu": "fu",
 		"si": "shi",
 		"ti": "chi",
 		"tu": "tsu",
 		"zi": "tzu",
-	}
-}
+	}}
 
 func toNumber(sym string) (int, error) {
-	for ix, testSyl := range syl() {
+	for ix, testSyl := range globals.Syl {
 		if sym == testSyl {
 			return ix, nil
 		}
@@ -56,8 +54,8 @@ func toInt(value string) (int, error) {
 		return 0, nil
 	}
 
-	if strings.HasPrefix(value, neg) && len(value) > len(neg) {
-		val, err = toInt(value[len(neg):])
+	if strings.HasPrefix(value, globals.Neg) && len(value) > len(globals.Neg) {
+		val, err = toInt(value[len(globals.Neg):])
 		if err != nil {
 			return -1, err
 		}
@@ -72,14 +70,14 @@ func toInt(value string) (int, error) {
 		return -1, err
 	}
 
-	return len(syl())*base + val, nil
+	return len(globals.Syl)*base + val, nil
 }
 
 func arrayToSpecial(components []string) []string {
 	ret := make([]string, len(components))
 	for pos, normal := range components {
 		ret[pos] = normal
-		for s, d := range specials() {
+		for s, d := range globals.Specials {
 			if normal == s {
 				ret[pos] = d
 			}
@@ -89,14 +87,14 @@ func arrayToSpecial(components []string) []string {
 }
 
 func toSpecial(value string) string {
-	for s, d := range specials() {
+	for s, d := range globals.Specials {
 		value = strings.Replace(value, s, d, -1)
 	}
 	return value
 }
 
 func fromSpecial(value string) string {
-	for d, s := range specials() {
+	for d, s := range globals.Specials {
 		value = strings.Replace(value, s, d, -1)
 	}
 	return value
@@ -106,10 +104,10 @@ func fromInteger(value int) string {
 	if value == 0 {
 		return ""
 	}
-	mod := value % len(syl())
-	rest := value / len(syl())
+	mod := value % len(globals.Syl)
+	rest := value / len(globals.Syl)
 
-	return FromInteger(rest) + syl()[mod]
+	return FromInteger(rest) + globals.Syl[mod]
 }
 
 func stringSplit(mnemo string, components []string) []string {
@@ -139,7 +137,7 @@ func IsMnemoWord(mnemo string) bool {
 // Convert an integer into its mnemo string
 func FromInteger(value int) string {
 	if value < 0 {
-		return fmt.Sprintf("%s%s", neg, FromInteger(-value))
+		return fmt.Sprintf("%s%s", globals.Neg, FromInteger(-value))
 	}
 
 	return toSpecial(fromInteger(value))
